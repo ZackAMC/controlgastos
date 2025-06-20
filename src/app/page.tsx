@@ -1,11 +1,25 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+
 
 export default function Home() {
+
+
+  type Gasto = {
+    id: number;
+    fecha: string;
+    tipo: string;
+    cantidad: number;
+    gasto: string;
+    tarjeta: string;
+};
+
+
   const [tipoGasto, setTipoGasto] = useState("");
   const [cantidad, setCantidad] = useState(0);
   const [gasto, setGasto] = useState("");
-  const [gastos, setGastos] = useState<any[]>([]);
+  const [gastos, setGastos] = useState<Gasto[]>([]);
   const [total, setTotal] = useState(0);
   const [menuActive, setMenuActive] = useState(false);
   const [tipoTarjeta, setTipoTarjeta] = useState("");
@@ -48,6 +62,24 @@ export default function Home() {
     setGastosRappi(totalRappi);
   }, [gastos]);
 
+  const guardar = useCallback(async () => {
+  if (!datosCargados || !Array.isArray(gastos) || gastos.length === 0) return;
+
+  try {
+    const res = await fetch("https://zackdev.com/api/config.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ limite, gastos }),
+    });
+
+    if (!res.ok) {
+      console.error("Error al guardar:", await res.text());
+    }
+  } catch (error) {
+    console.error("Error en guardar():", error);
+  }
+}, [datosCargados, gastos, limite]);
+
   // Calcular porcentaje y color
   useEffect(() => {
     if (!datosCargados || limite <= 0) return;
@@ -58,7 +90,7 @@ export default function Home() {
     if (nuevoPorcentaje <= 49) setColor("#fff");
     else if (nuevoPorcentaje <= 69) setColor("#FF6126");
     else setColor("#e91717");
-  }, [total, limite, datosCargados]);
+  }, [total, limite, datosCargados, guardar]);
 
   // Guardar automáticamente cada vez que cambian gastos o límite
   useEffect(() => {
@@ -66,21 +98,7 @@ export default function Home() {
     guardar();
   }, [gastos, limite]);
 
-  const guardar = async () => {
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limite, gastos }),
-      });
 
-      if (!res.ok) {
-        console.error("Error al guardar:", await res.text());
-      }
-    } catch (error) {
-      console.error("Error en guardar():", error);
-    }
-  };
 
   const agregarGasto = () => {
     setMenuActive(false);
