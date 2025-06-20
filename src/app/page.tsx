@@ -1,11 +1,8 @@
-"use client"
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 
-
 export default function Home() {
-
-  
   const [tipoGasto, setTipoGasto] = useState("");
   const [cantidad, setCantidad] = useState(0);
   const [gasto, setGasto] = useState("");
@@ -17,10 +14,78 @@ export default function Home() {
   const [gastosDavivienda, setGastosDavivienda] = useState(0);
   const [gastosRappi, setGastosRappi] = useState(0);
   const [popup, setPopup] = useState(false);
+  const [porcentaje, setPorcentaje] = useState(0);
+  const [color, setColor] = useState("#fff");
+  const [datosCargados, setDatosCargados] = useState(false);
 
+  const API_URL = "https://zackdev.com/api/config.php";
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    fetch(API_URL)
+      .then((res) => res.json())
+      .then((data) => {
+        setLimite(data.limite || 0);
+        setGastos(Array.isArray(data.gastos) ? data.gastos : []);
+        setDatosCargados(true);
+      })
+      .catch((err) => {
+        console.error("Error cargando datos:", err);
+      });
+  }, []);
+
+  // Calcular totales a partir de los gastos
+  useEffect(() => {
+    const nuevoTotal = gastos.reduce((acc, gasto) => acc + gasto.cantidad, 0);
+    const totalDavivienda = gastos
+      .filter((g) => g.tarjeta === "Davivienda")
+      .reduce((acc, g) => acc + g.cantidad, 0);
+    const totalRappi = gastos
+      .filter((g) => g.tarjeta === "Rappi")
+      .reduce((acc, g) => acc + g.cantidad, 0);
+
+    setTotal(nuevoTotal);
+    setGastosDavivienda(totalDavivienda);
+    setGastosRappi(totalRappi);
+  }, [gastos]);
+
+  // Calcular porcentaje y color
+  useEffect(() => {
+    if (!datosCargados || limite <= 0) return;
+
+    const nuevoPorcentaje = Math.min(100, Math.max(0, (total / limite) * 100));
+    setPorcentaje(nuevoPorcentaje);
+
+    if (nuevoPorcentaje <= 49) setColor("#fff");
+    else if (nuevoPorcentaje <= 69) setColor("#FF6126");
+    else setColor("#e91717");
+  }, [total, limite, datosCargados]);
+
+  // Guardar automáticamente cada vez que cambian gastos o límite
+  useEffect(() => {
+    if (!datosCargados) return;
+    guardar();
+  }, [gastos, limite]);
+
+  const guardar = async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limite, gastos }),
+      });
+
+      if (!res.ok) {
+        console.error("Error al guardar:", await res.text());
+      }
+    } catch (error) {
+      console.error("Error en guardar():", error);
+    }
+  };
 
   const agregarGasto = () => {
-    setMenuActive(false)
+    setMenuActive(false);
+
     if (tipoGasto === "" || cantidad <= 0 || gasto === "") {
       alert("Por favor, completa todos los campos correctamente.");
       return;
@@ -28,109 +93,86 @@ export default function Home() {
 
     const nuevoGasto = {
       id: Date.now(),
-      fecha:  new Date().toLocaleDateString(),
+      fecha: new Date().toISOString().split("T")[0],
       tipo: tipoGasto,
-      cantidad: cantidad,
-      gasto: gasto,
+      cantidad,
+      gasto,
       tarjeta: tipoTarjeta,
     };
 
-    setGastos([...gastos, nuevoGasto]);
-    setTotal(total + cantidad);
+    setGastos((prev) => [...prev, nuevoGasto]);
     setTipoGasto("");
     setCantidad(0);
-    setGasto("")
+    setGasto("");
     setTipoTarjeta("");
-
-
-    if (tipoTarjeta === "Davivienda") {
-      setGastosDavivienda(gastosDavivienda + cantidad);
-    } else if (tipoTarjeta === "Rappi") {
-      setGastosRappi(gastosRappi + cantidad);
-    }
-
   };
 
   const eliminarGasto = (id: number) => {
-    const gastoEliminado = gastos.find(g => g.id === id);
-    if (gastoEliminado) {
-      setGastos(gastos.filter(g => g.id !== id));
-      setTotal(total - gastoEliminado.cantidad);
-      if (gastoEliminado.tarjeta === "Davivienda") {
-        setGastosDavivienda(gastosDavivienda - gastoEliminado.cantidad);
-      } else if (gastoEliminado.tarjeta === "Rappi") {
-        setGastosRappi(gastosRappi - gastoEliminado.cantidad);
-      }
-    }
+    setGastos((prev) => prev.filter((g) => g.id !== id));
   };
 
-
   const actionLimite = () => {
-    popup ? setPopup(false) : setPopup(true)
+    setPopup(false);
     if (limite < 0 || isNaN(limite)) {
       setLimite(0);
-      return;
     }
   };
 
   return (
     <div>
       <header className={menuActive ? "active" : ""}>
-          <button onClick={() => menuActive ? setMenuActive(false) : setMenuActive(true)}>
-            <span>+</span>
-          </button>
+        <button onClick={() => setMenuActive(!menuActive)}>
+          <span>+</span>
+        </button>
 
-          <div className={"contForm"}>
-            <form onSubmit={(e) => e.preventDefault()}>
+        <div className="contForm">
+          <form onSubmit={(e) => e.preventDefault()}>
+            <label>
+              <span>Tipo</span>
+              <select
+                onChange={(e) => setTipoGasto(e.target.value)}
+                value={tipoGasto}
+              >
+                <option value="">---</option>
+                <option value="Comida">Comida</option>
+                <option value="Ocio">Ocio</option>
+                <option value="Necesario">Necesario</option>
+              </select>
+            </label>
 
-                <label>
-                  <span>Tipo</span>
-                  <select onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {setTipoGasto(e.target.value)}}
-                    value={tipoGasto}
-                    >
-                    <option value="">---</option>
-                    <option value="Comida">Comida</option>
-                    <option value="Ocio">Ocio</option>
-                    <option value="Necesario">Necesario</option>
-                  </select>
-                </label>
+            <label>
+              <span>Tarjeta</span>
+              <select
+                onChange={(e) => setTipoTarjeta(e.target.value)}
+                value={tipoTarjeta}
+              >
+                <option value="">---</option>
+                <option value="Davivienda">Davivienda</option>
+                <option value="Rappi">Rappi</option>
+              </select>
+            </label>
 
-                <label>
-                  <span>Tarjeta</span>
-                  <select onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {setTipoTarjeta(e.target.value)}}
-                    value={tipoTarjeta}
-                    >
-                    <option value="">---</option>
-                    <option value="Davivienda">Davivienda</option>
-                    <option value="Rappi">Rappi</option>
-                  </select>
-                </label>
+            <label>
+              <span>Cantidad</span>
+              <input
+                type="number"
+                onChange={(e) => setCantidad(parseInt(e.target.value))}
+                value={cantidad.toString()}
+              />
+            </label>
 
-                <label>
-                  <span>Cantidad</span>
-                  <input
-                    type="number"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {setCantidad(parseInt(e.target.value))}}
-                    value={cantidad.toString()}
-                  />
-                </label>
+            <label>
+              <span>Gasto</span>
+              <input
+                type="text"
+                onChange={(e) => setGasto(e.target.value)}
+                value={gasto}
+              />
+            </label>
 
-                <label>
-                  <span>Gasto</span>
-                  <input
-                    type="text"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {setGasto(e.target.value)}}
-                    value={gasto}
-                  />
-                </label>
-
-                <button onClick={() => agregarGasto()}>
-                  Agregar
-                </button>
-
-            </form>
-          </div>
-
+            <button onClick={agregarGasto}>Agregar</button>
+          </form>
+        </div>
       </header>
 
       <main>
@@ -149,13 +191,22 @@ export default function Home() {
           </div>
           <div className="limite">
             <span>Limite de gastos / mes</span>
-            <p>${limite} <button onClick={()=>setPopup(true)}>Edit</button></p>
+            <p>
+              ${limite} <button onClick={() => setPopup(true)}>Edit</button>
+            </p>
           </div>
 
           <div className="barra">
-            <div className="prog"></div>
+            <div
+              className="prog"
+              style={{
+                width: `${porcentaje}%`,
+                backgroundColor: color,
+              }}
+            ></div>
           </div>
         </div>
+
         <div className="gastos">
           {gastos.length === 0 ? (
             <p>No hay gastos registrados.</p>
@@ -163,14 +214,14 @@ export default function Home() {
             <ul>
               {gastos.map((item) => (
                 <li key={item.id}>
-                  
                   <div className="top">
                     <span>{item.fecha}</span>
                     <span>{item.tipo}</span>
-                    <span>{item.tarjeta}</span>
-                    <button onClick={() => eliminarGasto(item.id)}>Eliminar</button>
+                    <span className="tarjeta">{item.tarjeta}</span>
+                    <button onClick={() => eliminarGasto(item.id)}>
+                      Eliminar
+                    </button>
                   </div>
-
                   <div className="bot">
                     <span>{item.gasto}</span>
                     <span>${item.cantidad}</span>
@@ -180,23 +231,21 @@ export default function Home() {
             </ul>
           )}
         </div>
-        
+
         <div className={popup ? "popup active" : "popup"}>
           <form onSubmit={(e) => e.preventDefault()}>
             <label>
               <span>Limite de gastos</span>
               <input
                 type="number"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {setLimite(parseInt(e.target.value))}}
+                onChange={(e) => setLimite(parseInt(e.target.value))}
                 value={limite.toString()}
               />
-              <button onClick={() => {actionLimite()}}>Guardar</button>
+              <button onClick={actionLimite}>Guardar</button>
             </label>
           </form>
         </div>
       </main>
-
-
     </div>
   );
 }

@@ -115,14 +115,11 @@ header.active > button::after{
   -o-transform: scale(9);
 }
 
-header .contForm{
-  position: fixed;
-  bottom: 110px;
-  left: 0;
-  width: 100%;
-}
 
 header .contForm > form{
+  position: fixed;
+  bottom: 110px;
+  left: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -133,23 +130,25 @@ header .contForm > form{
   -moz-transition: .4s all ease;
   -ms-transition: .4s all ease;
   -o-transition: .4s all ease;
-  transform: translateY(10%);
-  -webkit-transform: translateY(10%);
-  -moz-transform: translateY(10%);
-  -ms-transform: translateY(10%);
-  -o-transform: translateY(10%);
+  transform: translateX(-50%) translateY(10%);
+  -webkit-transform: translateX(-50%) translateY(10%);
+  -moz-transform: translateX(-50%) translateY(10%);
+  -ms-transform: translateX(-50%) translateY(10%);
+  -o-transform: translateX(-50%) translateY(10%);
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
 
 header.active .contForm > form{
-  transform:  translateY(0%);
-  -webkit-transform:  translateY(0%);
-  -moz-transform:  translateY(0%);
-  -ms-transform:  translateY(0%);
-  -o-transform:  translateY(0%);
+  transform:  translateX(-50%) translateY(0%);
+  -webkit-transform:  translateX(-50%) translateY(0%);
+  -moz-transform:  translateX(-50%) translateY(0%);
+  -ms-transform:  translateX(-50%) translateY(0%);
+  -o-transform:  translateX(-50%) translateY(0%);
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 header .contForm > form label{
@@ -170,7 +169,7 @@ header .contForm > form select {
   border-radius: 5px;
   border: none;
   background: #333;
-  color: #fff;
+  color: #b4b4b4;
 }
 
 header .contForm > form button {
@@ -179,8 +178,185 @@ header .contForm > form button {
   border-radius: 5px;
   border: none;
   background: #333;
-  color: #fff;
+  color: #b4b4b4;
   font-size: 18px;
   cursor: pointer;
   margin-top: 20px;
+}
+
+.popup{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  -webkit-transform: translate(-50%, -40%);
+  -moz-transform: translate(-50%, -40%);
+  -ms-transform: translate(-50%, -40%);
+  -o-transform: translate(-50%, -40%);
+  z-index: 1000;
+  width: 80%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  opacity: 0;
+  visibility: hidden;
+  transition: .4s all ease;
+  -webkit-transition: .4s all ease;
+  -moz-transition: .4s all ease;
+  -ms-transition: .4s all ease;
+  -o-transition: .4s all ease;
+  border-radius: 10px;
+}
+
+.popup label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.popup label span{
+  margin-bottom: 15px;
+}
+
+.popup label input{
+  margin-bottom: 15px;
+  height: 30px;
+  padding: 0 10px;
+}
+
+.popup label button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  background: #FF6126;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+
+.popup.active{
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+  opacity: 1;
+  visibility: visible;
+}
+
+
+main {
+  padding: 30px 20px;
+  margin-bottom: 50px;
+}
+
+main .valores{
+  margin-bottom: 40px;
+}
+
+main .valores > div{
+  margin-bottom: 20px;
+}
+
+main .valores > div.total > p{
+  font-size: 40px;
+}
+
+main .valores > div > p{
+  font-size: 28px;
+}
+
+main .valores .limite p{
+  display: flex;
+  justify-content: space-between;
+}
+
+main .valores .limite p button{
+  background: transparent;
+  border: none;
+  color: #FF6126;
+  font: inherit;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+main .valores .barra{
+  width: 100%;
+  height: 15px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
+}
+
+main .valores .barra > div{
+  height: 100%;
+  background: #FF6126;
+  width: 0%;
+  transition: width .4s ease;
+  -webkit-transition: width .4s ease;
+  -moz-transition: width .4s ease;
+  -ms-transition: width .4s ease;
+  -o-transition: width .4s ease;
+}
+
+main .gastos > p{
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+main .gastos > ul{
+  list-style: none;
+  padding: 0 15px;
+}
+
+main .gastos > ul > li{
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+main .gastos > ul > li .top{
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+main .gastos > ul > li .top span{
+  margin-right: 15px;
+}
+
+main .gastos > ul > li .top span.tarjeta{
+  font-weight: bold;
+}
+
+main .gastos > ul > li .top button{
+  background: transparent;
+  border: none;
+  color: #FF6126;
+  font: inherit;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+main .gastos > ul > li .bot{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+main .gastos > ul > li .bot > span{
+  font-size: 20px;
 }
